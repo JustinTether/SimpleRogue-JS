@@ -102,7 +102,15 @@ export class Player {
 
 
 
-
+        if(code == 190) { //Player is trying to go down stairs
+            let pos = this.x+","+this.y;
+            if(Game.map[pos] == ">") {
+                //Player is standing on stairs, move them to a new dungeon, add 1 to level (depth)
+                Game.level++;
+                Game.init();
+            }
+            return;
+        }
 
         if (code == 73) {
             Game.informPlayer(this.inventory); // Read out inventory
@@ -127,12 +135,12 @@ export class Player {
 
         if (!(newKey in Game.map)) { return; };
 
-        console.log("Calculating if hit");
+        console.log("Calculating if hit", this.enemys);
         //We've hit an enemy, let's figure out which one
         let parts = newKey.split(",");
 
         for (let i = 0; i < this.enemys.length; i++) {
-            if (Game.map[newKey] == this.enemys[i].sprite) {
+            if (parts[0] == this.enemys[i].x && parts[1] == this.enemys[i].y) {
                 //Roll a dice for fairness
                 let roll = Math.floor(ROT.RNG.getUniform() * 6);
                 if (roll >= 3) {
@@ -142,7 +150,7 @@ export class Player {
                     this.enemys[i].health -= this.dmg;
                     Game.engine.unlock();
                     return;
-                }else {
+                } else {
                     Game.notifications.push("You swing at the " + this.enemys[i].name + " and miss!");
                     Game.notify(Game.notifications);
                     Game.engine.unlock();

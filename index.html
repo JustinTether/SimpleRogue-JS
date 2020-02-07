@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <title>Javascript Roguelike</title>
   </head>
   <body>
@@ -8,5 +13,21 @@
     <script src="game.js" type="module"></script>
     <script src="objects/player.js" type="module"></script>
     <script src="objects/kobold.js" type="module"></script>
+
+    <div id="gameContainer">
+
+      </div>
+
+      <div class="about text-center">
+          <h2>SimpleRogue-JS => Simple Roguelike built for fun</h2>
+          <h3>Known bugs:</h3>
+          <ol>
+            <li>Sometimes if an enemy dies?? on the same square as the stairs, it changes the stairs to an empty space</li>
+            <li>Stairs currently don't work, the init() function needs refactor</li>
+            <li>Sometimes loot boxes can spawn outside the bounds of a room</li>
+            <li>If you spawn in the same space as an enemy, you cannot 'see' through them</li>
+          </ol>
+      </div>
+    
   </body>
 </html>

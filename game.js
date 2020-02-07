@@ -1,6 +1,7 @@
 //Imports -- All objects from the game
 import { Player } from "./objects/player.js";
 import { Kobold } from "./objects/kobold.js";
+import {Goblin } from "./objects/goblin.js";
 
 
 //ROT.RNG.setSeed();
@@ -44,14 +45,18 @@ export const Game = {
 
   init: function () {
     this.display = new ROT.Display({ fontSize: 18 });
-    this.textDisplay = new ROT.Display({ width: 30, height: 20 }); //Dedicated display specifically for text notifications in-game
+    this.textDisplay = new ROT.Display({ width: 35, height: 20 }); //Dedicated display specifically for text notifications in-game
     this.fov = new ROT.FOV.PreciseShadowcasting(Game.shadowCast);
     this.scheduler = new ROT.Scheduler.Simple();
-    this.scheduler.add(player, true);
-    this.scheduler.add(kobold, true);
     this.engine = new ROT.Engine(this.scheduler);
+    levelSpawn();
+    Game.createMap();
+    Game.spawnEnemies();
+    Game.scheduler.add(player, true)
+    for(let i = 0; i < Game.enemys.length; i++) {
+      Game.scheduler.add(Game.enemys[i], true);
+    }
     this.engine.start();
-    this.createMap();
   },//END OF DISPLAY GENERATION
 
 
@@ -74,22 +79,65 @@ export const Game = {
     }
 
     this.digger.create(diggerCallback.bind(this));
-    this.drawWholeMap();
+    Game.drawWholeMap();
 
   }, //END OF MAP CREATION
 
 
 
   spawnEnemies: () => { //Random function for generating some enemies
-    let spawnRoom = Game.rooms[Math.floor(Math.random() * Math.floor(Game.rooms.length))];
-    kobold.x = spawnRoom.getCenter()[0];
-    kobold.y = spawnRoom.getCenter()[1];
+    for(let i = 0; i < Game.enemys.length; i++) {
+      console.log("ENEMY ARRAY ",Game.enemys);
+      let spawnRoom = Game.rooms[Math.floor(Math.random() * Math.floor(Game.rooms.length))];
+      Game.enemys[i].x = spawnRoom.getCenter()[0];
+      Game.enemys[i].y = spawnRoom.getCenter()[1];
+  
+      let pos = Game.enemys[i].x + "," + Game.enemys[i].y;
+  
+      Game.map[pos] = Game.enemys[i].sprite;
+    }
+    Game.spawnLoot();
+    Game.spawnStairs();
 
-    let pos = kobold.x + "," + kobold.y;
+  }, //END OF Mob spawn logic
 
-    Game.map[pos] = "k";
+  spawnLoot: () => {
+    let spawnRoom = Game.rooms[Math.floor(Math.random() * Game.rooms.length)];
+    for(let i = 0; i < Game.level*1.25; i++) {
+      let rndx = Math.floor(Math.random() * spawnRoom._x1+10);
+      let rndy = Math.floor(Math.random() * spawnRoom._y1+10);
 
-  }, //END OF LOOT GEN
+      while(rndx < spawnRoom.x1) {
+        rndx = Math.floor(Math.random() * spawnRoom._x1+10);
+        while(rndx > spawnRoom.x2) {
+          rndx = Math.floor(Math.random() * spawnRoom._x1+10);
+        }
+      }
+
+      while(rndy < spawnRoom.y1) {
+        rndy = Math.floor(Math.random() * spawnRoom._y1+5);
+        while(rndy > spawnRoom.y2) {
+          rndy = Math.floor(Math.random() * spawnRoom._y1+5);
+        }
+      }
+
+      let pos = rndx+","+rndy;
+      Game.map[pos] = "*";
+
+
+      console.log("ROOMS ARE LIKE SO ", Game.rooms);
+    }
+  },
+
+
+  spawnStairs: () => {
+    let spawnRoom = Game.rooms[Math.floor(Math.random() * Game.rooms.length)];
+    let pos = spawnRoom.getCenter()[0]+","+spawnRoom.getCenter()[1];
+
+    Game.map[pos] = ">";
+    console.log("STAIRS AT ", pos);
+    Game.createSpawn();
+  }, //End of stair spawning logic
 
 
 
@@ -102,8 +150,22 @@ export const Game = {
 
       //If the key shows up in enemies
       let bgColor = (Game.map[pos] ? "#d3d3d3" : "#2b2d2f");
-      let fgColor = (Game.map[pos] == "k" ? "#F00" : "#FFF"); //Is it a kobold? Draw as red
-      //fgColor = (Game.map[pos] == "g" ? "#0F0" : "FFF");
+      let fgColor = "#FFF" //Set basic fg color to white
+
+        switch(Game.map[pos]) {
+          case "k": 
+            fgColor =  "#F00"; //Is it a kobold? Draw as red
+            break;
+          case "g":
+            fgColor = "#0F0"; //Is it a goblin? Draw as green
+            break;
+          case ">":
+            fgColor = "#585858";//Is it stairs? Draw as grey
+            break;
+          case "*":
+            fgColor = "#FF0"
+            break;
+        }
       Game.display.draw(x, y, ch, fgColor, bgColor);
 
     });
@@ -134,7 +196,7 @@ export const Game = {
     player.y = spawnRoom.getCenter()[1]; //Second value returned
 
     console.log("Player position: ", player.x, player.y);
-
+    Game.drawWholeMap();
   }, //END OF SPAWN CREATION
 
 
@@ -164,8 +226,19 @@ export const Game = {
 
   shadowCast: (x, y) => { //Function for use in FOV computations
     let pos = x + "," + y;
-    if (pos in Game.map) { return (Game.map[pos] == "."); }
-    return false;
+    switch(Game.map[pos]) {
+      case ".":
+        return true;
+  
+      case ">":
+        return true;
+
+      case "*":
+        return true;
+      
+      default: 
+        return false;
+    }
   },
 
   //New and improved messaging function. The idea here is to read off a continual list of information strings. 
@@ -187,44 +260,45 @@ export const Game = {
 
   drawStatus: () => {
     Game.textDisplay.drawText(0, Game.textDisplay._options.height -1, "Health: %c{green}"+player.health+ "%c{white} Damage: %c{red}"+player.dmg +"%c{white} Armor: %c{yellow}"+player.armor);
-  }
+  },
 
 
 
 } // END OF GAME OBJECT ITSELF
 
+  // Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
+var player = new Player(0, 0, "@", [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
 
-
-
-
-
-
-
-
-
-if (Game.level == 1) {
-  var player = new Player(0, 0, "@", [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
-  var kobold = new Kobold(0, 0, "k", player);
-  Game.enemys.push(kobold);
-    // Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
-  for (let i = 0; i < player.inventory.length; i++) {
-    player.inventory[i].equipped = true;
-    if (player.inventory[i].dmg) {
-      player.dmg += player.inventory[i].dmg;
-    }
-    if (player.inventory[i].armor) {
-      player.armor += player.inventory[i].armor;
-    }
+function levelSpawn() {
+  switch(Game.level) {
+    case 1:
+        console.log("Game is at level 1");
+        var kobold1 = new Kobold(0, 0, "k", player);
+        var kobold2 = new Kobold(0, 0, "k", player);
+        var goblin1 = new Goblin(0, 0, "g", player);
+        Game.enemys.push(kobold1, kobold2, goblin1);
+        for (let i = 0; i < player.inventory.length; i++) {
+          player.inventory[i].equipped = true;
+          if (player.inventory[i].dmg) {
+            player.dmg += player.inventory[i].dmg;
+          }
+          if (player.inventory[i].armor) {
+            player.armor += player.inventory[i].armor;
+          }
+        }
+        console.log("PLAYER OBJECT ", player);
+      break;
+    
+    case 2:
+      //do something
+      break;
+  
+  
   }
-
-
-  //Enemy generation
-
+  
 }
 
 
-
-console.log(player);
 
 
 
@@ -233,16 +307,22 @@ console.log(player);
 
 
 
+//The logic of game start sequence
+//Game.init() => Game.createMap();
+//Game.createMap() => Game.drawWholeMap();
+//DrawWholeMap() => DrawRooms()
+//This.drawRooms()
+//this.levelSpawn() => this.spawnEnemies()
+//this.spawnEnemies() => this.spawnStairs();
+//this.spawnStairs => this.createSpawn();
 
 //Initialize game
 Game.init(); //Create display
-Game.createSpawn(); //Move on to next section, creating spawnpoint
-Game.spawnEnemies();
 player.draw();
 Game.drawStatus();
 console.log("ENTIRE GAME ENTITY ", Game.map);
-document.body.appendChild(Game.getDisplay().getContainer()); //Push display to the body of the page
-document.body.appendChild(Game.textDisplay.getContainer());
+document.getElementById("gameContainer").appendChild(Game.getDisplay().getContainer()); //Push display to the body of the page
+document.getElementById("gameContainer").appendChild(Game.textDisplay.getContainer());
 
 
 
