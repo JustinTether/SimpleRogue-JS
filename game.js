@@ -1,7 +1,6 @@
 //Imports -- All objects from the game
 import { Player } from "./objects/player.js";
-import { Kobold } from "./objects/kobold.js";
-import {Goblin } from "./objects/goblin.js";
+import { Monster } from "./objects/monster.js";
 
 
 //ROT.RNG.setSeed();
@@ -23,17 +22,21 @@ export const Game = {
   freeSpace: [],
   items: [ //Starting items pool, things you can randomly spawn with
     { name: "Short Sword", dmg: 2, equipped: false }, // All items are like this, if item is equipped:true, we calc damage for it
-    { name: "worn leather leggings", armor: 2, equipped: false },
+    { name: "worn leather leggings", armor: 2, equipped: false, slot: "legs" },
+    { name: "worn leather chestpiece", armor: 3, equipped: false, slot: "chest" },
+    { name: "worn leather helm", armor: 1, equipped: false, slot: "head" },
+    { name: "hand-me-down Mace", dmg: 2, equipped: false, slot: "hand" },
+    { name: "broken training Sword", dmg: 1, equipped: false, slot: "hand" },
   ],
   loot: [ //Loot to be dropped by mobs or found in chests
-    { name: "golden crown", armor: 2, equipped: false },
-    { name: "leather leggings", armor: 4, equipped: false },
-    { name: "long sword", dmg: 4, equipped: false },
-    { name: "leather chestpiece", armor: 5, equipped: false },
-    { name: "leather helm", armor: 4, equipped: false },
-    { name: "steel chestpiece", armor: 8, equipped: false },
-    { name: "steel leggings", armor: 6, equipped: false },
-    { name: "steel mace", dmg: 3, equipped: false },
+    { name: "golden crown", armor: 2, equipped: false, slot: "head" },
+    { name: "leather leggings", armor: 4, equipped: false, slot: "legs" },
+    { name: "long sword", dmg: 4, equipped: false, slot: "hand" },
+    { name: "leather chestpiece", armor: 5, equipped: false, slot: "chest" },
+    { name: "leather helm", armor: 4, equipped: false, slot: "head" },
+    { name: "steel chestpiece", armor: 8, equipped: false, slot: "chest" },
+    { name: "steel leggings", armor: 6, equipped: false, slot: "legs" },
+    { name: "steel mace", dmg: 3, equipped: false, slot: "hand" },
 
 
   ],
@@ -49,11 +52,13 @@ export const Game = {
     this.fov = new ROT.FOV.PreciseShadowcasting(Game.shadowCast);
     this.scheduler = new ROT.Scheduler.Simple();
     this.engine = new ROT.Engine(this.scheduler);
+    document.getElementById("gameContainer").appendChild(Game.getDisplay().getContainer()); //Push display to the body of the page
+    document.getElementById("gameContainer").appendChild(Game.textDisplay.getContainer());
     levelSpawn();
     Game.createMap();
     Game.spawnEnemies();
     Game.scheduler.add(player, true)
-    for(let i = 0; i < Game.enemys.length; i++) {
+    for (let i = 0; i < Game.enemys.length; i++) {
       Game.scheduler.add(Game.enemys[i], true);
     }
     this.engine.start();
@@ -68,8 +73,11 @@ export const Game = {
 
 
   createMap: function () {
+    // debugger;
     //Generate a map for use in this specific dungeon
     this.digger = new ROT.Map.Digger(); //Width x Height
+
+    //Digger callback function
     let diggerCallback = function (x, y, value) {
       if (value) { return; } //Not storing walls?
 
@@ -79,22 +87,20 @@ export const Game = {
     }
 
     this.digger.create(diggerCallback.bind(this));
-    Game.drawWholeMap();
 
+    //Draw entire map from players point of view
+    Game.drawWholeMap();
+    Game.drawRooms();
   }, //END OF MAP CREATION
 
 
 
   spawnEnemies: () => { //Random function for generating some enemies
-    for(let i = 0; i < Game.enemys.length; i++) {
-      console.log("ENEMY ARRAY ",Game.enemys);
+    for (let i = 0; i < Game.enemys.length; i++) {
+      console.log("ENEMY ARRAY ", Game.enemys);
       let spawnRoom = Game.rooms[Math.floor(Math.random() * Math.floor(Game.rooms.length))];
       Game.enemys[i].x = spawnRoom.getCenter()[0];
       Game.enemys[i].y = spawnRoom.getCenter()[1];
-  
-      let pos = Game.enemys[i].x + "," + Game.enemys[i].y;
-  
-      Game.map[pos] = Game.enemys[i].sprite;
     }
     Game.spawnLoot();
     Game.spawnStairs();
@@ -103,25 +109,20 @@ export const Game = {
 
   spawnLoot: () => {
     let spawnRoom = Game.rooms[Math.floor(Math.random() * Game.rooms.length)];
-    for(let i = 0; i < Game.level*1.25; i++) {
-      let rndx = Math.floor(Math.random() * spawnRoom._x1+10);
-      let rndy = Math.floor(Math.random() * spawnRoom._y1+10);
 
-      while(rndx < spawnRoom.x1) {
-        rndx = Math.floor(Math.random() * spawnRoom._x1+10);
-        while(rndx > spawnRoom.x2) {
-          rndx = Math.floor(Math.random() * spawnRoom._x1+10);
-        }
+    for (let i = 0; i < Game.level * 1.25; i++) {
+      let rndx = Math.floor(Math.random() * spawnRoom._x2);
+      let rndy = Math.floor(Math.random() * spawnRoom._y2);
+
+      while (rndx < spawnRoom.x1 && rndx > spawnRoom.x2 - 1) {
+        rndx = Math.floor(Math.random() * spawnRoom._x2);
       }
 
-      while(rndy < spawnRoom.y1) {
-        rndy = Math.floor(Math.random() * spawnRoom._y1+5);
-        while(rndy > spawnRoom.y2) {
-          rndy = Math.floor(Math.random() * spawnRoom._y1+5);
-        }
+      while (rndy < spawnRoom.y1 && rndy > spawnRoom.y2 - 1) {
+        rndy = Math.floor(Math.random() * spawnRoom._y2);
       }
 
-      let pos = rndx+","+rndy;
+      let pos = rndx + "," + rndy;
       Game.map[pos] = "*";
 
 
@@ -132,7 +133,7 @@ export const Game = {
 
   spawnStairs: () => {
     let spawnRoom = Game.rooms[Math.floor(Math.random() * Game.rooms.length)];
-    let pos = spawnRoom.getCenter()[0]+","+spawnRoom.getCenter()[1];
+    let pos = spawnRoom.getCenter()[0] + "," + spawnRoom.getCenter()[1];
 
     Game.map[pos] = ">";
     console.log("STAIRS AT ", pos);
@@ -152,25 +153,27 @@ export const Game = {
       let bgColor = (Game.map[pos] ? "#d3d3d3" : "#2b2d2f");
       let fgColor = "#FFF" //Set basic fg color to white
 
-        switch(Game.map[pos]) {
-          case "k": 
-            fgColor =  "#F00"; //Is it a kobold? Draw as red
-            break;
-          case "g":
-            fgColor = "#0F0"; //Is it a goblin? Draw as green
-            break;
-          case ">":
-            fgColor = "#585858";//Is it stairs? Draw as grey
-            break;
-          case "*":
-            fgColor = "#FF0"
-            break;
-        }
+      switch (Game.map[pos]) {
+        case ">":
+          fgColor = "#585858";//Is it stairs? Draw as grey
+          break;
+        case "*":
+          fgColor = "#FF0"
+          break;
+      }
+
       Game.display.draw(x, y, ch, fgColor, bgColor);
 
+      for (let i = 0; i < Game.enemys.length; i++) {
+        if (x == Game.enemys[i].x && y == Game.enemys[i].y) {
+          console.log("WE SEE THE ENEMY, ")
+          Game.display.draw(Game.enemys[i].x, Game.enemys[i].y, Game.enemys[i].sprite, Game.enemys[i].color, bgColor);
+        }
+      }
+
     });
-    Game.display.draw(player.x, player.y, player.sprite, "#ff0"); //Draw player
-    this.drawRooms();
+
+    Game.display.draw(player.x, player.y, player.sprite, "#ff0", ""); //Draw player
   }, // END OF MAP GEN
 
 
@@ -200,7 +203,7 @@ export const Game = {
   }, //END OF SPAWN CREATION
 
 
-
+  //We need to rename this to drawInventory, as well as clean up some of the conditionals and the name of the input variables
   informPlayer: (text) => {
     Game.textDisplay.clear(); //Clear the information screen
 
@@ -222,24 +225,26 @@ export const Game = {
     } else {
       Game.textDisplay.drawText(0, 0, text);
     }
-  }, //END OF TEXT/NOTIFY SYSTEM
+  }, //END OF archaic TEXT/NOTIFY SYSTEM
+
 
   shadowCast: (x, y) => { //Function for use in FOV computations
     let pos = x + "," + y;
-    switch(Game.map[pos]) {
+    switch (Game.map[pos]) {
       case ".":
         return true;
-  
+
       case ">":
         return true;
 
       case "*":
         return true;
-      
-      default: 
+
+      default:
         return false;
     }
   },
+
 
   //New and improved messaging function. The idea here is to read off a continual list of information strings. 
   //We will read an array of strings, for each item we will increase Y draw by 1 so that it continues down the screen
@@ -248,10 +253,10 @@ export const Game = {
   notify: (text) => {
     Game.textDisplay.clear();
     //Loop through notifications
-    for(let i = 0; i < text.length; i++) {
+    for (let i = 0; i < text.length; i++) {
       //Display each notification with increasing y
       Game.textDisplay.drawText(0, i, text[i]);
-      if(i == Game.textDisplay._options.height - 2) {
+      if (i == Game.textDisplay._options.height - 2) {
         Game.notifications.splice(0, Game.notifications.length - 1);
       }
     }
@@ -259,43 +264,67 @@ export const Game = {
   },
 
   drawStatus: () => {
-    Game.textDisplay.drawText(0, Game.textDisplay._options.height -1, "Health: %c{green}"+player.health+ "%c{white} Damage: %c{red}"+player.dmg +"%c{white} Armor: %c{yellow}"+player.armor);
+    Game.textDisplay.drawText(0, Game.textDisplay._options.height - 1, "Health: %c{green}" + player.health + "%c{white} Damage: %c{red}" + player.dmg + "%c{white} Armor: %c{yellow}" + player.armor);
   },
+
+  resetGame: () => {
+    Game.map = {};
+    Game.enemys.splice(0, Game.enemys.length);
+    Game.engine = null;
+    Game.scheduler.clear();
+    Game.display.clear();
+    let page = document.getElementById("gameContainer");
+    page.innerHTML = "";
+
+    Game.init();
+  }
 
 
 
 } // END OF GAME OBJECT ITSELF
 
-  // Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
+
+// Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
 var player = new Player(0, 0, "@", [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
+//Set initial inventory
+for (let i = 0; i < player.inventory.length; i++) {
+  player.inventory[i].equipped = true;
+  if (player.inventory[i].dmg) {
+    player.dmg += player.inventory[i].dmg;
+  }
+  if (player.inventory[i].armor) {
+    player.armor += player.inventory[i].armor;
+  }
+}
+
 
 function levelSpawn() {
-  switch(Game.level) {
+  switch (Game.level) {
     case 1:
-        console.log("Game is at level 1");
-        var kobold1 = new Kobold(0, 0, "k", player);
-        var kobold2 = new Kobold(0, 0, "k", player);
-        var goblin1 = new Goblin(0, 0, "g", player);
-        Game.enemys.push(kobold1, kobold2, goblin1);
-        for (let i = 0; i < player.inventory.length; i++) {
-          player.inventory[i].equipped = true;
-          if (player.inventory[i].dmg) {
-            player.dmg += player.inventory[i].dmg;
-          }
-          if (player.inventory[i].armor) {
-            player.armor += player.inventory[i].armor;
-          }
-        }
-        console.log("PLAYER OBJECT ", player);
+      var en = [1, 2];
+      var spawnAmount = Math.floor(Math.random() * 3);
+      console.log("Game is at level 1");
+      for (let i = 0; i < spawnAmount; i++) {
+        Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
+      }
+      console.log("PLAYER OBJECT ", player);
+
       break;
-    
+
     case 2:
-      //do something
+      var en = [1, 2];
+      var spawnAmount = Math.floor(Math.random() * 6);
+      console.log("Game is at level 1");
+      for (let i = 0; i < spawnAmount; i++) {
+        Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
+      }
+      console.log("LEVEL 2 INITALIZED ", Game.enemys);
+
       break;
-  
-  
+
+
   }
-  
+
 }
 
 
@@ -321,8 +350,7 @@ Game.init(); //Create display
 player.draw();
 Game.drawStatus();
 console.log("ENTIRE GAME ENTITY ", Game.map);
-document.getElementById("gameContainer").appendChild(Game.getDisplay().getContainer()); //Push display to the body of the page
-document.getElementById("gameContainer").appendChild(Game.textDisplay.getContainer());
+
 
 
 

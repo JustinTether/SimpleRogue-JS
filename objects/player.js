@@ -1,6 +1,4 @@
 import { Game } from "../game.js"
-
-
 export class Player {
     event = (e) => this.handleEvent(e);
 
@@ -24,6 +22,62 @@ export class Player {
     draw() {
         Game.drawWholeMap();
         //Game.display.draw(this.x, this.y, this.sprite, "#ff0");
+
+    }
+
+    equipItem(code) {
+        let keyMap = {};
+        keyMap[65] = "0";
+        keyMap[66] = "1";
+        keyMap[67] = "2";
+        keyMap[68] = "3";
+        keyMap[69] = "4";
+        keyMap[70] = "5";
+
+        //Player is wanting to do something with his inventory most likely
+        let invItem = this.inventory[Number(keyMap[code])];
+
+        //Time to re-write this to ensure that we also double check the equipped item slot to ensure you can't equip two items!
+
+        if (!invItem.equipped) { //If item is not currently equipped
+
+            for(let i = 0; i < this.inventory.length; i++) {
+
+                if(this.inventory[i].slot == invItem.slot) {
+                    if(this.inventory[i].equipped) {
+                        this.inventory[i].equipped = false;
+                        if(this.inventory[i].armor) this.armor -= this.inventory[i].armor;
+                        if(this.inventory[i].dmg) this.dmg -= this.inventory[i].dmg;
+                    }
+                 
+                }
+            }
+            if (invItem.dmg) {
+                this.dmg += invItem.dmg;
+            }
+
+            if (invItem.armor) {
+                this.armor += invItem.armor
+            }
+
+            invItem.equipped = !invItem.equipped;
+            Game.informPlayer(this.inventory);
+            return;
+
+        } else {
+
+            if (invItem.dmg) {
+                this.dmg -= invItem.dmg;
+            }
+
+            if (invItem.armor) {
+                this.armor -= invItem.armor
+            }
+
+            invItem.equipped = !invItem.equipped;
+            Game.informPlayer(this.inventory);
+            return;
+        }
 
     }
 
@@ -65,37 +119,7 @@ export class Player {
 
 
         if (code >= 65 && code < 70) {
-            //Player is wanting to do something with his inventory most likely
-            let invItem = this.inventory[Number(keyMap[code])];
-
-            if (!invItem.equipped) { //If item is not currently equipped
-                if (invItem.dmg) {
-                    this.dmg += invItem.dmg;
-                }
-
-                if (invItem.armor) {
-                    this.armor += invItem.armor
-                }
-
-                invItem.equipped = !invItem.equipped;
-                Game.informPlayer(this.inventory);
-                return;
-
-            } else {
-
-                if (invItem.dmg) {
-                    this.dmg -= invItem.dmg;
-                }
-
-                if (invItem.armor) {
-                    this.armor -= invItem.armor
-                }
-
-                invItem.equipped = !invItem.equipped;
-                Game.informPlayer(this.inventory);
-                return;
-            }
-
+            this.equipItem(code);
         }
 
 
@@ -107,7 +131,7 @@ export class Player {
             if(Game.map[pos] == ">") {
                 //Player is standing on stairs, move them to a new dungeon, add 1 to level (depth)
                 Game.level++;
-                Game.init();
+                Game.resetGame();
             }
             return;
         }
