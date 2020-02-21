@@ -105,16 +105,7 @@ export class Player {
 
         let code = e.keyCode;
 
-        if (code == 76) { //Player pressed L, look for objects here
-            let key = this.x + "," + this.y;
-
-            if (Game.map[key] == "*") { //Player is above a chest
-                let loot = Game.loot[Math.floor(Math.random() * Game.loot.length)];
-                Game.informPlayer("You picked up " + loot.name);
-                this.inventory.push(loot);
-                Game.map[key] = ".";
-            }
-        }
+        if (code == 76) this.look();
 
 
 
@@ -171,7 +162,8 @@ export class Player {
                     //Deduct damage from this entity
                     Game.notifications.push("You swing at the " + this.enemys[i].name + " and hit! Dealing " + this.dmg + " damage");
                     Game.notify(Game.notifications);
-                    this.enemys[i].health -= this.dmg;
+                    //this.enemys[i].health -= this.dmg;
+                    this.enemys[i].damage(this.dmg, false);
                     Game.engine.unlock();
                     return;
                 } else {
@@ -195,11 +187,45 @@ export class Player {
         Game.engine.unlock();
     }
 
-    getCoords() {
-        return ({ x: this.x, y: this.y });
+    
+    look() {
+        //Method for checking the ground for items, picking up loose items, looting corpses, chests, etc.
+        //Here we'll define some stuff for making sure that corpses are removed (Or changed to a different look?)
+
+        let pos = this.x + "," + this.y; //Players position turned into a string, for use in Game.map[]
+
+        switch(Game.map[pos]) {
+            //Switch because it becomes an ez jump table, incase we have lots of looting options
+
+            case "%":
+                //Is corpse
+                //Do we get loot? Let's roll a dice for this
+                let roll = Math.floor(Math.random() * 6);
+                if(roll >= 3) {
+                    let loot = Game.loot[Math.floor(Math.random() * Game.loot.length)];
+                    Game.informPlayer("You picked up " + loot.name);
+                    this.inventory.push(loot);
+                    Game.map[pos] = ".";
+                } else {
+                    Game.informPlayer("You found nothing when looking the corpse..");
+                    Game.map[pos] = ".";
+                }
+               
+            break;
+
+            case "*":
+                //Loot box
+                let loot = Game.loot[Math.floor(Math.random() * Game.loot.length)];
+                Game.informPlayer("You picked up " + loot.name);
+                this.inventory.push(loot);
+                Game.map[pos] = ".";
+            break;
+
+
+
+        }
+
     }
-
-
 
 
 

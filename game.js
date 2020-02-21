@@ -37,6 +37,7 @@ export const Game = {
     { name: "steel chestpiece", armor: 8, equipped: false, slot: "chest" },
     { name: "steel leggings", armor: 6, equipped: false, slot: "legs" },
     { name: "steel mace", dmg: 3, equipped: false, slot: "hand" },
+    { name: "emerald ring", armor: 1, equipped: false, slot: "finger" },
 
 
   ],
@@ -155,10 +156,20 @@ export const Game = {
 
       switch (Game.map[pos]) {
         case ">":
-          fgColor = "#585858";//Is it stairs? Draw as grey
+          fgColor = "#585858";//Is it stairs? Draw as grey, etc
           break;
         case "*":
           fgColor = "#FF0"
+          break;
+
+        case "%":
+          fgColor = "#FFF";
+          bgColor = "#F00";
+          break;
+
+        case ",":
+          fgColor = "#F00";
+          bgColor = "#d3d3d3";
           break;
       }
 
@@ -240,6 +251,12 @@ export const Game = {
       case "*":
         return true;
 
+      case "%":
+        return true;
+
+      case ",":
+        return true;
+
       default:
         return false;
     }
@@ -284,8 +301,11 @@ export const Game = {
 } // END OF GAME OBJECT ITSELF
 
 
+//First-run initialization, create player, add a starter item to his inventory, set it to 'equipped'
+
+
 // Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
-var player = new Player(0, 0, "@", [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
+var player = new Player(0, 0, '\u263A', [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
 //Set initial inventory
 for (let i = 0; i < player.inventory.length; i++) {
   player.inventory[i].equipped = true;
@@ -298,33 +318,14 @@ for (let i = 0; i < player.inventory.length; i++) {
 }
 
 
-function levelSpawn() {
-  switch (Game.level) {
-    case 1:
-      var en = [1, 2];
-      var spawnAmount = Math.floor(Math.random() * 3);
-      console.log("Game is at level 1");
-      for (let i = 0; i < spawnAmount; i++) {
-        Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
-      }
-      console.log("PLAYER OBJECT ", player);
 
-      break;
-
-    case 2:
-      var en = [1, 2];
-      var spawnAmount = Math.floor(Math.random() * 6);
-      console.log("Game is at level 1");
-      for (let i = 0; i < spawnAmount; i++) {
-        Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
-      }
-      console.log("LEVEL 2 INITALIZED ", Game.enemys);
-
-      break;
-
-
-  }
-
+function levelSpawn() { //TODO: Expand this function into a much more robust version that can spawn more enemies 
+  let spawnAmount = Math.floor(Math.random() * Game.level + 1);
+  let en = [1, 2, 3];
+    for(let i = 0; i < spawnAmount; i++) {
+      //Spawn enemies
+      Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
+    }
 }
 
 
@@ -346,6 +347,7 @@ function levelSpawn() {
 //this.spawnStairs => this.createSpawn();
 
 //Initialize game
+
 Game.init(); //Create display
 player.draw();
 Game.drawStatus();

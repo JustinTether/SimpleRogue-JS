@@ -43,6 +43,13 @@ export class Monster {
                 this.color = "#0F0";
             break;
 
+            case 3: 
+                this.name = "witch";
+                this.sprite = "w";
+                this.color = "#AF007F";
+            break;
+
+
             //More as needed
             
         }
@@ -53,14 +60,13 @@ export class Monster {
 
 
 act() {
-    console.log("THIS ", this); // DEBUG, remove
     Game.engine.lock();
     
     if(this.health < 1) {
         // Char is dead, do no more
         let pos = this.x+","+this.y;
         let index = Game.enemys.indexOf(this);
-        Game.map[pos] = ".";
+        Game.map[pos] = "%";
         Game.scheduler.remove(this);
         Game.enemys.splice(index, 1); 
         Game.engine.unlock();
@@ -69,8 +75,25 @@ act() {
 
 
     var passableCallback = function (x, y) { //This callback will return true if the positon exists within our game map
-        return (x + "," + y in Game.map);
-    }
+        //add portion that makes it so enemies cannot stand on-top of eachother, and will instead 'swarm'
+
+        let pos = x+","+y;
+
+        if(Game.map[pos]) {
+            //If the game position exists in the map
+
+            for(let i = 0; i < Game.enemys.length; i++) {
+                //Loop through enemies, if the enemy does NOT equal the entity checking, it checks position with other enemies
+                if(Game.enemys[i] != this.self) {
+                    return(pos in Game.map);
+
+                } else if(Game.enemys[i].x == x && Game.enemys[i].y == y)  {
+                    return false;
+
+                    }
+                }
+            }
+        } 
 
     
     switch(this.id) { // Monster movement designation, you can change topology here
@@ -82,6 +105,9 @@ act() {
             this.astar = new ROT.Path.AStar(this.player.x, this.player.y, passableCallback, { topology: 8 });
         break;
 
+        case 3: //Witch, 8 topology
+            this.astar = new ROT.Path.AStar(this.player.x, this.player.y, passableCallback, { topology: 8});
+        break;
         //More to come
 
     }
@@ -92,6 +118,7 @@ act() {
     var pathCallback =  (x, y) => {
         this.path.push([x, y]);
     }
+
 
     this.path = [];
     this.astar.compute(this.x, this.y, pathCallback);
@@ -108,11 +135,13 @@ act() {
             Game.notifications.push("a " + this.name + " lunges at you! It connects dealing " + this.dmg +" damage\n\n");
             Game.notify(Game.notifications);
             Game.engine.unlock();
+            this.draw();
             return;
         }else {
             Game.notifications.push("a " + this.name + " swings at you! But misses\n\n");
             Game.notify(Game.notifications);
             Game.engine.unlock();
+            this.draw();
             return;
         }
        
@@ -131,16 +160,34 @@ act() {
 
         this.x = x;
         this.y = y;
+        this.draw();
     }
-    this.draw();
+    
     Game.engine.unlock();
 
 
 }
 
 draw() {
+        Game.drawWholeMap();
+    // Game.display.draw(this.x, this.y, this.sprite, this.color);
+}
+
+damage(amount, crit) {
+    this.health -= amount;
+    let iBloodLocation = Math.floor(Math.random() * 1);
+    let sBloodPos = "";
+    let sBX = this.x += iBloodLocation;
+    let sBY = this.y += iBloodLocation; 
+    sBloodPos = sBX + "," + sBY;
+    console.error("BLOOD POS ", sBloodPos);
+
+    Game.map[sBloodPos] = ",";
     Game.drawWholeMap();
-     //Game.display.draw(this.x, this.y, this.sprite, this.color);
+    if(crit) {
+        //make arm
+
+    }
 }
 
 
