@@ -25,92 +25,27 @@ export class Player {
 
     }
 
-    equipItem(code) {
-        let keyMap = {};
-        keyMap[65] = "0";
-        keyMap[66] = "1";
-        keyMap[67] = "2";
-        keyMap[68] = "3";
-        keyMap[69] = "4";
-        keyMap[70] = "5";
-
-        //Player is wanting to do something with his inventory most likely
-        let invItem = this.inventory[Number(keyMap[code])];
-
-        //Time to re-write this to ensure that we also double check the equipped item slot to ensure you can't equip two items!
-
-        if (!invItem.equipped) { //If item is not currently equipped
-
-            for(let i = 0; i < this.inventory.length; i++) {
-
-                if(this.inventory[i].slot == invItem.slot) {
-                    if(this.inventory[i].equipped) {
-                        this.inventory[i].equipped = false;
-                        if(this.inventory[i].armor) this.armor -= this.inventory[i].armor;
-                        if(this.inventory[i].dmg) this.dmg -= this.inventory[i].dmg;
-                    }
-                 
-                }
-            }
-            if (invItem.dmg) {
-                this.dmg += invItem.dmg;
-            }
-
-            if (invItem.armor) {
-                this.armor += invItem.armor
-            }
-
-            invItem.equipped = !invItem.equipped;
-            Game.informPlayer(this.inventory);
-            return;
-
-        } else {
-
-            if (invItem.dmg) {
-                this.dmg -= invItem.dmg;
-            }
-
-            if (invItem.armor) {
-                this.armor -= invItem.armor
-            }
-
-            invItem.equipped = !invItem.equipped;
-            Game.informPlayer(this.inventory);
-            return;
-        }
-
-    }
-
     handleEvent(e) {
         //Process the users input
 
         let keyMap = {};
-        keyMap[38] = 0;
-        keyMap[33] = 1;
-        keyMap[39] = 2;
-        keyMap[34] = 3;
-        keyMap[40] = 4;
-        keyMap[35] = 5;
         keyMap[37] = 6;
-        keyMap[36] = 7;
-
-        //Keys for item usage
-        keyMap[65] = "0";
-        keyMap[66] = "1";
-        keyMap[67] = "2";
-        keyMap[68] = "3";
-        keyMap[69] = "4";
-        keyMap[70] = "5";
-
+        keyMap[38] = 0;
+        keyMap[39] = 2;
+        keyMap[40] = 4;
 
         let code = e.keyCode;
 
         if (code == 76) this.look();
 
+        if(code == 68) {
+            this.dropItem();
+        }
 
 
-        if (code >= 65 && code < 70) {
-            this.equipItem(code);
+
+        if (code == 69) {
+            this.equipItem();
         }
 
 
@@ -187,7 +122,7 @@ export class Player {
         Game.engine.unlock();
     }
 
-    
+
     look() {
         //Method for checking the ground for items, picking up loose items, looting corpses, chests, etc.
         //Here we'll define some stuff for making sure that corpses are removed (Or changed to a different look?)
@@ -225,8 +160,80 @@ export class Player {
 
         }
 
+    } //END of look function
+
+
+    dropItem() {
+        //Initiate drop 
+        let disposeItem = (event) => {
+            let key = event.keyCode;
+            console.error("Inside function, key code is ", key);
+            let index = key - 65;
+            this.equipItem(event);
+            this.inventory.splice(index, 1);
+            window.removeEventListener("keydown", disposeItem);
+            Game.informPlayer(this.inventory);
+        }
+
+        window.addEventListener("keydown", disposeItem);
     }
 
+
+    equipItem(code) {
+        //redesign of equipment system, equip/unequip any item based on alphabet code, will only work after pressing E
+        let eItem = (e) => {
+            let key = e.keyCode;
+
+            let invItem = this.inventory[key - 65]; //65 happens to be the charCode for 'a' -- It also goes in order, so 66 (b) - 65 = 1
+
+            //ensure that we also double check the equipped item slot to ensure you can't equip two items!
+            if (!invItem.equipped) { //If item is not currently equipped
+    
+                for(let i = 0; i < this.inventory.length; i++) {
+    
+                    if(this.inventory[i].slot == invItem.slot) {
+                        if(this.inventory[i].equipped) {
+                            this.inventory[i].equipped = false;
+                            if(this.inventory[i].armor) this.armor -= this.inventory[i].armor;
+                            if(this.inventory[i].dmg) this.dmg -= this.inventory[i].dmg;
+                        }
+                     
+                    }
+                }
+                if (invItem.dmg) {
+                    this.dmg += invItem.dmg;
+                }
+    
+                if (invItem.armor) {
+                    this.armor += invItem.armor
+                }
+    
+                invItem.equipped = !invItem.equipped;
+                Game.informPlayer(this.inventory);
+    
+            } else {
+    
+                if (invItem.dmg) {
+                    this.dmg -= invItem.dmg;
+                }
+    
+                if (invItem.armor) {
+                    this.armor -= invItem.armor
+                }
+    
+                invItem.equipped = !invItem.equipped;
+                Game.informPlayer(this.inventory);
+            }
+
+            window.removeEventListener("keydown", eItem);
+        }
+
+        if(code == undefined) {
+            window.addEventListener("keydown", eItem);
+        } else eItem(code);
+
+     
+    }
 
 
 

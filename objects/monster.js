@@ -173,7 +173,7 @@ draw() {
     // Game.display.draw(this.x, this.y, this.sprite, this.color);
 }
 
-damage(amount, crit) {
+damage(amount, crit) { //I have started using a different naming convention here, where the first letter is the data-type. (iBloodLocation is an integer)
     this.health -= amount;
     let iBloodLocation = Math.floor(Math.random() * 1);
     let sBloodPos = "";

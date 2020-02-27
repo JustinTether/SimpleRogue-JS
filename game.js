@@ -12,7 +12,7 @@ export const Game = {
   textDisplay: null,
   scheduler: null,
   notifications: [],
-  invSlots: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"],
+  invSlots: ["a", "b", "c", "e", "f", "g", "h", "i", "j", "k"],
   digger: null,
   mapGen: null, //used for map generation
   map: {},
@@ -219,24 +219,25 @@ export const Game = {
     Game.textDisplay.clear(); //Clear the information screen
 
     if (Array.isArray(text)) { //If the item passed in is an array, it's the players inventory
+      Game.textDisplay.drawText(0, 0, "Your Inventory ");
       for (let i = 0; i < text.length; i++) {
         let item = text[i];
 
-        Game.textDisplay.drawText(0, 0, "Your Inventory ");
-        let string = Game.invSlots[i] + ") " + text[i].name;
-        if (text[i].equipped) {
+
+        let string = String.fromCharCode(97 + i) + ") " + item.name; //using fromCharCode we catagorize each slot as a letter
+        if (item.equipped) {
           string += "%b{green} e";
         }
         Game.textDisplay.drawText(0, i + 1, string);
       }
-      Game.textDisplay.drawText(0, player.inventory.length + 3, "Press any key to equip or unequip");
+      Game.textDisplay.drawText(0, player.inventory.length + 3, "Press e key to equip or unequip or d to drop");
       Game.drawStatus();
 
       //Otherwise, print string as normal
     } else {
       Game.textDisplay.drawText(0, 0, text);
     }
-  }, //END OF archaic TEXT/NOTIFY SYSTEM
+  }, //END of inventory system
 
 
   shadowCast: (x, y) => { //Function for use in FOV computations
@@ -255,6 +256,9 @@ export const Game = {
         return true;
 
       case ",":
+        return true;
+
+      case "]":
         return true;
 
       default:
@@ -280,10 +284,13 @@ export const Game = {
     Game.drawStatus();
   },
 
+  //Display health and other info for the player
   drawStatus: () => {
     Game.textDisplay.drawText(0, Game.textDisplay._options.height - 1, "Health: %c{green}" + player.health + "%c{white} Damage: %c{red}" + player.dmg + "%c{white} Armor: %c{yellow}" + player.armor);
   },
 
+
+  //Used between levels to fully reset screens/map data. Will need to be changed once we start saving levels
   resetGame: () => {
     Game.map = {};
     Game.enemys.splice(0, Game.enemys.length);
@@ -322,19 +329,11 @@ for (let i = 0; i < player.inventory.length; i++) {
 function levelSpawn() { //TODO: Expand this function into a much more robust version that can spawn more enemies 
   let spawnAmount = Math.floor(Math.random() * Game.level + 1);
   let en = [1, 2, 3];
-    for(let i = 0; i < spawnAmount; i++) {
-      //Spawn enemies
-      Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
-    }
+  for (let i = 0; i < spawnAmount; i++) {
+    //Spawn enemies
+    Game.enemys.push(new Monster(en[Math.floor(Math.random() * en.length)], 0, 0, player));
+  }
 }
-
-
-
-
-
-//START OF KEYBOARD CONTROLLER OBJECT
-
-
 
 
 //The logic of game start sequence
