@@ -60,7 +60,13 @@ export const Game = {
       "@": [640, 1952], //player char
       "#": [448, 128], //Simple wall
       "*": [192, 2], //Chest?
-      ".": [128, 128], //floor
+      "1": [64, 128], //Floor 2
+      "2": [96, 128], //floor 3
+      "3": [128, 128], //floor 4
+      "4": [160, 128], //floor 5
+      "5": [192, 128], //floor 6
+      "6": [224, 128], //floor 7
+      "7": [256, 128], //floor 8
       "k": [32, 1307], //Kobold
       "w": [288, 2464], //Witch
       "g": [640, 1314], //goblin
@@ -110,9 +116,9 @@ export const Game = {
 
       let key = x + "," + y;
       Game.freeSpace.push(key);
-      
+      let tile = Math.floor(Math.random() * 6) +1; //Random number between 0 and 8 for floors
       //Map coords are stored with a tile property and an entities array, entities get pushed/spliced from when things enter the world
-      this.map[key] = {tile: ".", entities: [ "." ] };
+      this.map[key] = {tile: tile, entities: [ tile ] };
   
     }
 
@@ -346,6 +352,30 @@ export const Game = {
 
         case "w":
           return true;
+
+        case 0:
+          return true;
+
+        case 1:
+          return true;
+
+        case 2:
+          return true;
+
+        case 3:
+          return true;
+
+        case 4:
+          return true;
+
+        case 5:
+          return true;
+
+        case 6:
+          return true;
+
+        case 7:
+          return true;        
   
         default:
           return false;

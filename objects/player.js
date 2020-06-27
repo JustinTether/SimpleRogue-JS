@@ -183,7 +183,7 @@ export class Player {
                 this.inventory.push(loot);
                 for(let i = 0; i < Game.map[pos].entities.length; i++) {
                         
-                    if(i == "*") Game.map[pos].entities.splice(i, 1);
+                    if(Game.map[pos].entities[i] == "*") Game.map[pos].entities.splice(i, 1);
                 }
             break;
 
