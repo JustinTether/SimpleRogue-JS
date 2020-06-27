@@ -77,7 +77,7 @@ export const Game = {
 
     }});
 
-    this.textDisplay = new ROT.Display({ width: 35, height: 20 }); //Dedicated display specifically for text notifications in-game
+    this.textDisplay = new ROT.Display({ width: 35, height: 29.9 }); //Dedicated display specifically for text notifications in-game
     this.fov = new ROT.FOV.PreciseShadowcasting(Game.shadowCast);
     this.scheduler = new ROT.Scheduler.Simple();
     this.engine = new ROT.Engine(this.scheduler);
