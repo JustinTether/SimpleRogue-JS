@@ -137,6 +137,8 @@ export const Game = {
       let spawnRoom = Game.rooms[Math.floor(Math.random() * Math.floor(Game.rooms.length))];
       Game.enemys[i].x = spawnRoom.getCenter()[0];
       Game.enemys[i].y = spawnRoom.getCenter()[1];
+      let pos = Game.enemys[i].x + "," + Game.enemys[i].y;
+      Game.map[pos].entities.push(Game.enemys[i].sprite);
     }
     Game.spawnLoot();
     Game.spawnStairs();
@@ -227,6 +229,7 @@ export const Game = {
         }
       
   
+        //TODO Remove legacy code below
         // console.log(`TILE ${pos} VISIBILITY: ${visibility}`);
         //   //if(Game.map[pos]) {
 
@@ -242,15 +245,15 @@ export const Game = {
         // xOffset++;
         // console.log(`Drew ${ch} at ${pos} with x Offset: ${xOffset} and y Offset: ${yOffset}`);
   
-        for (let i = 0; i < Game.enemys.length; i++) {
-          if (x == Game.enemys[i].x && y == Game.enemys[i].y) {
-            console.log("WE SEE THE ENEMY, ")
-            Game.display.draw(Game.enemys[i].x - startingX, Game.enemys[i].y - startingY, Game.enemys[i].sprite);
-          }
-        }
+        // for (let i = 0; i < Game.enemys.length; i++) {
+        //   if (x == Game.enemys[i].x && y == Game.enemys[i].y) {
+        //     console.log("WE SEE THE ENEMY, ")
+        //     Game.display.draw(Game.enemys[i].x - startingX, Game.enemys[i].y - startingY, Game.enemys[i].sprite);
+        //   }
+        // }
        
 
-      
+      //TODO
       });
 
       

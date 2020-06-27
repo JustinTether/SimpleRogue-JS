@@ -68,6 +68,12 @@ act() {
         let index = Game.enemys.indexOf(this);
         console.log(`This is the pos we are attempting to put a body down at ${pos} which translates to ${Game.map[pos]}`);
         Game.map[pos].entities.push("%");
+        
+        //Loop through the pos entities and remove ourselves from the tile entities
+        for(let i = 0; i < Game.map[pos].entities.length; i++) {
+
+            if(Game.map[pos].entities[i] == this.sprite) Game.map[pos].entities.splice(i, 1);
+        }
         Game.scheduler.remove(this);
         Game.enemys.splice(index, 1); 
         Game.engine.unlock();
@@ -159,8 +165,18 @@ act() {
         // pos = this.x + "," + this.y;
         // Game.map[pos] = this.sprite;
 
+        let pos = this.x + "," + this.y;
+        
+        for(let i = 0; i < Game.map[pos].entities.length; i++) {
+
+            if(Game.map[pos].entities[i] == this.sprite) Game.map[pos].entities.splice(i, 1);
+        }
+
         this.x = x;
         this.y = y;
+
+        let newPos = x + "," + y;
+        Game.map[newPos].entities.push(this.sprite);
         this.draw();
     }
     
