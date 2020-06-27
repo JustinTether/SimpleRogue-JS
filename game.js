@@ -28,7 +28,7 @@ export const Game = {
     { name: "hand-me-down Mace", dmg: 2, equipped: false, slot: "hand" },
     { name: "broken training Sword", dmg: 1, equipped: false, slot: "hand" },
   ],
-  loot: [ //Loot to be dropped by mobs or found in chests
+  loot: [ //Loot to be dropped by mobs or found in chests => First 20 are local/any drops, some specific items are reserved for bosses.
     { name: "golden crown", armor: 2, equipped: false, slot: "head" },
     { name: "leather leggings", armor: 4, equipped: false, slot: "legs" },
     { name: "long sword", dmg: 4, equipped: false, slot: "hand" },
@@ -38,6 +38,8 @@ export const Game = {
     { name: "steel leggings", armor: 6, equipped: false, slot: "legs" },
     { name: "steel mace", dmg: 3, equipped: false, slot: "hand" },
     { name: "emerald ring", armor: 1, equipped: false, slot: "finger" },
+    { name: "jade ring", armor: 1, equipped: false, slot: "finger" },
+    { name: "claymore sword", dmg: 6, equipped: false, slot: "hand"},
 
 
   ],
@@ -45,10 +47,30 @@ export const Game = {
   room: null,
   engine: null,
   roomDebug: [],
+  tileSet: null,
   //End of variable declaration
 
+
   init: function () {
-    this.display = new ROT.Display({ fontSize: 18 });
+    this.tileSet = document.createElement("img");
+    this.tileSet.src = "tileset.png";
+    console.log(`This is our tileset: ${this.tileSet}`);
+
+    this.display = new ROT.Display({width: 20, height: 14, layout: "tile", bg: "transparent", tileWidth: 32, tileHeight: 32, tileSet: this.tileSet, tileMap: {
+      "@": [1952, 2528], //player char
+      "#": [1952, 544], //Simple wall
+      "*": [192, 2], //Chest?
+      ".": [1696, 64], //floor
+      "k": [32, 1307], //Kobold
+      "w": [288, 2464], //Witch
+      "g": [640, 1314], //goblin
+      ">": [1152, 230], //Stairs
+      "%": [256, 1280], //skeletal corpse
+      ",": [544, 1632], //Blood
+
+
+    }});
+
     this.textDisplay = new ROT.Display({ width: 35, height: 20 }); //Dedicated display specifically for text notifications in-game
     this.fov = new ROT.FOV.PreciseShadowcasting(Game.shadowCast);
     this.scheduler = new ROT.Scheduler.Simple();
@@ -80,11 +102,17 @@ export const Game = {
 
     //Digger callback function
     let diggerCallback = function (x, y, value) {
-      if (value) { return; } //Not storing walls?
+      if (value) {
+        let key = x + "," + y;
+        this.map[key] = {tile: "#", entities: [], };
+        return;
+      } //Not storing walls?
 
       let key = x + "," + y;
       Game.freeSpace.push(key);
-      this.map[key] = ".";
+      //this.map[key] = "."; //Let's try to expand the map
+      this.map[key] = {tile: ".", entities: [], };
+  
     }
 
     this.digger.create(diggerCallback.bind(this));
@@ -124,7 +152,7 @@ export const Game = {
       }
 
       let pos = rndx + "," + rndy;
-      Game.map[pos] = "*";
+      Game.map[pos].entities.push("*");
 
 
       console.log("ROOMS ARE LIKE SO ", Game.rooms);
@@ -136,7 +164,7 @@ export const Game = {
     let spawnRoom = Game.rooms[Math.floor(Math.random() * Game.rooms.length)];
     let pos = spawnRoom.getCenter()[0] + "," + spawnRoom.getCenter()[1];
 
-    Game.map[pos] = ">";
+    Game.map[pos].tile = ">";
     console.log("STAIRS AT ", pos);
     Game.createSpawn();
   }, //End of stair spawning logic
@@ -144,52 +172,96 @@ export const Game = {
 
 
   drawWholeMap: function () {
-    Game.display.clear(); //Simulates actual FOV by clearing any non-seen tiles, this can be removed
-    Game.fov.compute(player.x, player.y, 10, function (x, y, r, visibility) { //Draw only what is visable
+    //this.tileSet.onload = function() {
+      //ensure the tileset is actually loaded
+      
+      Game.display.clear(); //Simulates actual FOV by clearing any non-seen 
+      let xOffset = 0;
+      let yOffset = 0;
 
-      let pos = x + "," + y;
-      let ch = (Game.map[pos]);
+     
+      let xWidth = 20;
+      let yHeight = 14;
+      let startingX = player.x -xWidth/2;
+      let startingY = player.y - yHeight/2;
+      let xEnd = startingX + xWidth;
+      let yEnd = startingY + yHeight;
+      let cursorX = 0;
+      let cursorY = 0;
 
-      //If the key shows up in enemies
-      let bgColor = (Game.map[pos] ? "#d3d3d3" : "#2b2d2f");
-      let fgColor = "#FFF" //Set basic fg color to white
+   
 
-      switch (Game.map[pos]) {
-        case ">":
-          fgColor = "#585858";//Is it stairs? Draw as grey, etc
-          break;
-        case "*":
-          fgColor = "#FF0"
-          break;
+      Game.fov.compute(player.x, player.y, 10, function (x, y, r, visibility) { //Draw only what is visable
+      
+        //debugger;
+ 
+        
+        
 
-        case "%":
-          fgColor = "#FFF";
-          bgColor = "#F00";
-          break;
+        if(x >= startingX && x < xEnd) {
 
-        case ",":
-          fgColor = "#F00";
-          bgColor = "#d3d3d3";
-          break;
-      }
+          if(y >= startingY && y < yEnd) {
 
-      Game.display.draw(x, y, ch, fgColor, bgColor);
+            let pos = x + "," + y;
 
-      for (let i = 0; i < Game.enemys.length; i++) {
-        if (x == Game.enemys[i].x && y == Game.enemys[i].y) {
-          console.log("WE SEE THE ENEMY, ")
-          Game.display.draw(Game.enemys[i].x, Game.enemys[i].y, Game.enemys[i].sprite, Game.enemys[i].color, bgColor);
+            let cursorX = x - startingX;
+            let cursorY = y - startingY;
+
+            if(Game.map[pos].tile) {
+
+              Game.map[pos].entities[0] = Game.map[pos].tile;
+
+              Game.display.draw(cursorX, cursorY, Game.map[pos].entities);
+              cursorX++; 
+              if(cursorX == xWidth && cursorY < yHeight) cursorY++;
+              if(cursorX % xWidth == 0) cursorX = 0;
+            }
+
+           
+
+          }
+
         }
-      }
+      
+  
+        // console.log(`TILE ${pos} VISIBILITY: ${visibility}`);
+        //   //if(Game.map[pos]) {
 
-    });
+        //     if(visibility == true) {
+  
+        //     let ch = Game.map[pos].tile;
+   
+  
+        // console.log(`Drawing tile: ${ch}`);
+        // Game.display.draw(x, y, ch);
 
-    Game.display.draw(player.x, player.y, player.sprite, "#ff0", ""); //Draw player
+        // if(xOffset % 20 == 0) yOffset++;
+        // xOffset++;
+        // console.log(`Drew ${ch} at ${pos} with x Offset: ${xOffset} and y Offset: ${yOffset}`);
+  
+        for (let i = 0; i < Game.enemys.length; i++) {
+          if (x == Game.enemys[i].x && y == Game.enemys[i].y) {
+            console.log("WE SEE THE ENEMY, ")
+            Game.display.draw(Game.enemys[i].x - startingX, Game.enemys[i].y - startingY, Game.enemys[i].sprite);
+          }
+        }
+       
+
+      
+      });
+
+      
+
+  
+      Game.display.draw(player.x - startingX, player.y - startingY, [".", player.sprite]); //Draw player
+      
+    //}
+    
   }, // END OF MAP GEN
 
 
   drawDoor: function (x, y) {
-    Game.display.draw(x, y, "+", "red", "");
+   // Game.display.draw(x, y, "+", "red", "");
   }, //END OF DRAW DOORS FUNCTION
 
 
@@ -242,28 +314,48 @@ export const Game = {
 
   shadowCast: (x, y) => { //Function for use in FOV computations
     let pos = x + "," + y;
-    switch (Game.map[pos]) {
-      case ".":
-        return true;
 
-      case ">":
-        return true;
+    if(Game.map[pos]) { //Does this pos contain a tile? this is a stupid check needed because when we spawn a player his default
+      //location is 0,0 -- It then runs the shadowcast at 0,0 which will attempt to check Game.Map[pos] with said pos
+      //Most of the time that pos doesn't actually exist, though, it should
 
-      case "*":
-        return true;
+      switch (Game.map[pos].tile) {
+        case ".":
+          return true;
+  
+        case ">":
+          return true;
+  
+        case "*":
+          return true;
+  
+        case "%":
+          return true;
+  
+        case ",":
+          return true;
+  
+        case "]":
+          return true;
+  
+        case "#":
+          return false;
 
-      case "%":
-        return true;
+        case "k":
+          return true;
+        
+        case "g":
+          return true;
 
-      case ",":
-        return true;
+        case "w":
+          return true;
+  
+        default:
+          return false;
+      }
 
-      case "]":
-        return true;
-
-      default:
-        return false;
     }
+    
   },
 
 
@@ -271,12 +363,15 @@ export const Game = {
   //We will read an array of strings, for each item we will increase Y draw by 1 so that it continues down the screen
   // If we expand Y to the maximum screendepth of displayText.options.height - 1, clear all the notifications but the last
   //We will also have the status of the player drawn in a seperate function
-  notify: (text) => {
+  //Notify itself is called once per notification, when a notification is given
+  notify: (notifications) => {
     Game.textDisplay.clear();
     //Loop through notifications
-    for (let i = 0; i < text.length; i++) {
+    for (let i = 0; i < notifications.length; i++) {
       //Display each notification with increasing y
-      Game.textDisplay.drawText(0, i, text[i]);
+      Game.textDisplay.drawText(0, i, notifications[i]);
+
+      //If we expand past the screens height, clear the nofications array
       if (i == Game.textDisplay._options.height - 2) {
         Game.notifications.splice(0, Game.notifications.length - 1);
       }
@@ -284,8 +379,10 @@ export const Game = {
     Game.drawStatus();
   },
 
+
   //Display health and other info for the player
   drawStatus: () => {
+    Game.textDisplay.drawText(0, Game.textDisplay._options.height - 2, "Depth: %c{red}" + Number(Game.level));
     Game.textDisplay.drawText(0, Game.textDisplay._options.height - 1, "Health: %c{green}" + player.health + "%c{white} Damage: %c{red}" + player.dmg + "%c{white} Armor: %c{yellow}" + player.armor);
   },
 
@@ -299,20 +396,30 @@ export const Game = {
     Game.display.clear();
     let page = document.getElementById("gameContainer");
     page.innerHTML = "";
-
+    Game.notifications = [];
     Game.init();
-  }
+  },
+
+  createPlayer: () => {
+    //This is our char generation function, we will run this at the very start and take information from players to create a char
+    //There's lots we can do here, including asking questions in order to determine 'best playstyle' but reality is we don't have classes
+    
+  },
+
+
+
 
 
 
 } // END OF GAME OBJECT ITSELF
 
 
+
 //First-run initialization, create player, add a starter item to his inventory, set it to 'equipped'
 
 
 // Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
-var player = new Player(0, 0, '\u263A', [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
+var player = new Player(0, 0, '@', [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
 //Set initial inventory
 for (let i = 0; i < player.inventory.length; i++) {
   player.inventory[i].equipped = true;

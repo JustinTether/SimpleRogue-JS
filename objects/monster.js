@@ -66,7 +66,8 @@ act() {
         // Char is dead, do no more
         let pos = this.x+","+this.y;
         let index = Game.enemys.indexOf(this);
-        Game.map[pos] = "%";
+        console.log(`This is the pos we are attempting to put a body down at ${pos} which translates to ${Game.map[pos]}`);
+        Game.map[pos].tile = "%";
         Game.scheduler.remove(this);
         Game.enemys.splice(index, 1); 
         Game.engine.unlock();
@@ -79,7 +80,7 @@ act() {
 
         let pos = x+","+y;
 
-        if(Game.map[pos]) {
+        if(Game.map[pos].tile !== "#") {
             //If the game position exists in the map
 
             for(let i = 0; i < Game.enemys.length; i++) {
@@ -182,7 +183,7 @@ damage(amount, crit) { //I have started using a different naming convention here
     sBloodPos = sBX + "," + sBY;
     console.error("BLOOD POS ", sBloodPos);
 
-    Game.map[sBloodPos] = ",";
+    Game.map[sBloodPos].tile = ",";
     Game.drawWholeMap();
     if(crit) {
         //make arm

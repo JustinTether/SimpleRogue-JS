@@ -54,7 +54,7 @@ export class Player {
 
         if(code == 190) { //Player is trying to go down stairs
             let pos = this.x+","+this.y;
-            if(Game.map[pos] == ">") {
+            if(Game.map[pos].tile == ">") {
                 //Player is standing on stairs, move them to a new dungeon, add 1 to level (depth)
                 Game.level++;
                 Game.resetGame();
@@ -80,10 +80,9 @@ export class Player {
         let newY = this.y + diff[1];
 
         let newKey = newX + "," + newY;
+        console.log("NEW KEY + ", newKey);
 
-        // if (!(newKey in Game.map)) { return; } /* cannot move in this direction */
-
-        if (!(newKey in Game.map)) { return; };
+        if (Game.map[newKey].tile == "#") { return; };
 
         console.log("Calculating if hit", this.enemys);
         //We've hit an enemy, let's figure out which one
@@ -114,7 +113,7 @@ export class Player {
 
         console.log("Current NewX values ", newX, newY);
 
-        Game.display.draw(this.x, this.y, Game.map[this.x + "," + this.y]);
+        Game.display.draw(this.x, this.y, Game.map[this.x + "," + this.y].tile);
         this.x = newX;
         this.y = newY;
         this.draw();
@@ -129,7 +128,7 @@ export class Player {
 
         let pos = this.x + "," + this.y; //Players position turned into a string, for use in Game.map[]
 
-        switch(Game.map[pos]) {
+        switch(Game.map[pos].tile) {
             //Switch because it becomes an ez jump table, incase we have lots of looting options
 
             case "%":
@@ -179,7 +178,7 @@ export class Player {
     }
 
 
-    equipItem(code) {
+    equipItem(code) { //TODO: add the ability to drop an item, dropped items get added to Game.Map[pos].entities[index] -- This allows us to stack tiles
         //redesign of equipment system, equip/unequip any item based on alphabet code, will only work after pressing E
         let eItem = (e) => {
             let key = e.keyCode;
@@ -233,7 +232,7 @@ export class Player {
         } else eItem(code);
 
      
-    }
+    }// End of equipItem method 
 
 
 

@@ -1,0 +1,14 @@
+{ "columns":64,
+ "image":"tilesetUtmo.png",
+ "imageheight":3040,
+ "imagewidth":2048,
+ "margin":0,
+ "name":"Utmo",
+ "spacing":0,
+ "tilecount":6080,
+ "tiledversion":"1.4.0",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":1.4
+}
