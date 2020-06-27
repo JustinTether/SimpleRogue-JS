@@ -56,15 +56,15 @@ export const Game = {
     this.tileSet.src = "tileset.png";
     console.log(`This is our tileset: ${this.tileSet}`);
 
-    this.display = new ROT.Display({width: 20, height: 14, layout: "tile", bg: "transparent", tileWidth: 32, tileHeight: 32, tileSet: this.tileSet, tileMap: {
-      "@": [1952, 2528], //player char
-      "#": [1952, 544], //Simple wall
+    this.display = new ROT.Display({width: 20, height: 14, layout: "tile", tileWidth: 32, tileHeight: 32, tileSet: this.tileSet, tileMap: {
+      "@": [640, 1952], //player char
+      "#": [448, 128], //Simple wall
       "*": [192, 2], //Chest?
-      ".": [1696, 64], //floor
+      ".": [128, 128], //floor
       "k": [32, 1307], //Kobold
       "w": [288, 2464], //Witch
       "g": [640, 1314], //goblin
-      ">": [1152, 230], //Stairs
+      ">": [1184, 320], //Stairs
       "%": [256, 1280], //skeletal corpse
       ",": [544, 1632], //Blood
 
@@ -110,8 +110,9 @@ export const Game = {
 
       let key = x + "," + y;
       Game.freeSpace.push(key);
-      //this.map[key] = "."; //Let's try to expand the map
-      this.map[key] = {tile: ".", entities: [], };
+      
+      //Map coords are stored with a tile property and an entities array, entities get pushed/spliced from when things enter the world
+      this.map[key] = {tile: ".", entities: [ "." ] };
   
     }
 
@@ -174,10 +175,8 @@ export const Game = {
   drawWholeMap: function () {
     //this.tileSet.onload = function() {
       //ensure the tileset is actually loaded
-      
-      Game.display.clear(); //Simulates actual FOV by clearing any non-seen 
-      let xOffset = 0;
-      let yOffset = 0;
+      Game.display.clear();
+      //Simulates actual FOV by clearing any non-seen tiles
 
      
       let xWidth = 20;
@@ -186,13 +185,11 @@ export const Game = {
       let startingY = player.y - yHeight/2;
       let xEnd = startingX + xWidth;
       let yEnd = startingY + yHeight;
-      let cursorX = 0;
-      let cursorY = 0;
 
    
-
-      Game.fov.compute(player.x, player.y, 10, function (x, y, r, visibility) { //Draw only what is visable
       
+      Game.fov.compute(player.x, player.y, 10, function (x, y, r, visibility) { //Draw only what is visable
+       
         //debugger;
  
         
@@ -214,7 +211,7 @@ export const Game = {
               Game.display.draw(cursorX, cursorY, Game.map[pos].entities);
               cursorX++; 
               if(cursorX == xWidth && cursorY < yHeight) cursorY++;
-              if(cursorX % xWidth == 0) cursorX = 0;
+              if(cursorX % xWidth == 0 && cursorY < yHeight) cursorX = 0;
             }
 
            
@@ -253,7 +250,7 @@ export const Game = {
       
 
   
-      Game.display.draw(player.x - startingX, player.y - startingY, [".", player.sprite]); //Draw player
+      //Game.display.draw(player.x - startingX, player.y - startingY, [".", player.sprite]); //Draw player
       
     //}
     

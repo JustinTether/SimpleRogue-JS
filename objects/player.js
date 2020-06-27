@@ -112,10 +112,22 @@ export class Player {
         }
 
         console.log("Current NewX values ", newX, newY);
+        let newPos = newX + "," + newY;
+        let oldPos = this.x + "," + this.y;
 
-        Game.display.draw(this.x, this.y, Game.map[this.x + "," + this.y].tile);
+        //Game.display.draw(this.x, this.y, Game.map[this.x + "," + this.y].tile);
+        //Loop through old position entities till we find us, remove us
+        for(let i = 0; i < Game.map[oldPos].entities.length; i++) {
+
+            if(Game.map[oldPos].entities[i] == "@") Game.map[oldPos].entities.splice(i, 1);
+        }
+
+        //Add ourselves to the new tiles entities
+        Game.map[newPos].entities.push("@");
+
         this.x = newX;
         this.y = newY;
+
         this.draw();
         window.removeEventListener("keydown", this.event);
         Game.engine.unlock();
@@ -128,10 +140,15 @@ export class Player {
 
         let pos = this.x + "," + this.y; //Players position turned into a string, for use in Game.map[]
 
-        switch(Game.map[pos].tile) {
-            //Switch because it becomes an ez jump table, incase we have lots of looting options
 
-            case "%":
+        //Let's switch this so that we now use the entities section
+
+        for(let i = 0; i < Game.map[pos].entities.length; i++) {
+
+            switch(Game.map[pos].entities[i]) {
+
+
+                case "%":
                 //Is corpse
                 //Do we get loot? Let's roll a dice for this
                 let roll = Math.floor(Math.random() * 6);
@@ -139,25 +156,44 @@ export class Player {
                     let loot = Game.loot[Math.floor(Math.random() * Game.loot.length)];
                     Game.informPlayer("You picked up " + loot.name);
                     this.inventory.push(loot);
-                    Game.map[pos] = ".";
+                    //Game.map[pos]= ".";
+
+                    //Loop trough the tile entities and delete the corpse we're standing on
+                    for(let i = 0; i < Game.map[pos].entities.length; i++) {
+                        
+                        if(Game.map[pos].entities[i] == "%") Game.map[pos].entities.splice(i, 1);
+                    }
                 } else {
                     Game.informPlayer("You found nothing when looking the corpse..");
-                    Game.map[pos] = ".";
+                    //Loop trough the tile entities and delete the corpse we're standing on
+                    for(let i = 0; i < Game.map[pos].entities.length; i++) {
+                        
+                        if(i == "%") Game.map[pos].entities.splice(i, 1);
+                    }
                 }
                
             break;
+
+
 
             case "*":
                 //Loot box
                 let loot = Game.loot[Math.floor(Math.random() * Game.loot.length)];
                 Game.informPlayer("You picked up " + loot.name);
                 this.inventory.push(loot);
-                Game.map[pos] = ".";
+                for(let i = 0; i < Game.map[pos].entities.length; i++) {
+                        
+                    if(i == "*") Game.map[pos].entities.splice(i, 1);
+                }
             break;
 
 
 
+
+            }
+
         }
+
 
     } //END of look function
 

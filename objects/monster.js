@@ -67,7 +67,7 @@ act() {
         let pos = this.x+","+this.y;
         let index = Game.enemys.indexOf(this);
         console.log(`This is the pos we are attempting to put a body down at ${pos} which translates to ${Game.map[pos]}`);
-        Game.map[pos].tile = "%";
+        Game.map[pos].entities.push("%");
         Game.scheduler.remove(this);
         Game.enemys.splice(index, 1); 
         Game.engine.unlock();
@@ -183,7 +183,7 @@ damage(amount, crit) { //I have started using a different naming convention here
     sBloodPos = sBX + "," + sBY;
     console.error("BLOOD POS ", sBloodPos);
 
-    Game.map[sBloodPos].tile = ",";
+    Game.map[sBloodPos].entities.push(",");
     Game.drawWholeMap();
     if(crit) {
         //make arm
