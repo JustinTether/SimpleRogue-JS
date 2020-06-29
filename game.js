@@ -77,9 +77,9 @@ export const Game = {
       "6": [224, 128], //floor 7
       "7": [256, 128], //floor 8
 
-      "k": [32, 1307], //Kobold
+      "k": [32, 1984], //Kobold
       "w": [288, 2464], //Witch
-      "g": [640, 1314], //goblin
+      "g": [640, 1920], //goblin
       ">": [1184, 320], //Stairs
       "%": [256, 1280], //skeletal corpse
 
@@ -268,12 +268,6 @@ export const Game = {
       //TODO
       });
 
-      
-
-  
-      //Game.display.draw(player.x - startingX, player.y - startingY, [".", player.sprite]); //Draw player
-      
-    //}
     
   }, // END OF MAP GEN
 
@@ -475,7 +469,7 @@ export const Game = {
 // Create player object, give him starting items, set the starting items to 'equipped' and add their values to our own
 var player = new Player(0, 0, '@', [Game.items[Math.floor(Math.random() * Game.items.length)]], Game.enemys);
 //Set initial inventory
-for (let i = 0; i < player.inventory.length; i++) {
+for (let i = 0; i < player.inventory.length; i++) { //I think we can replace this with our player.equip method? It might work better
   player.inventory[i].equipped = true;
   if (player.inventory[i].dmg) {
     player.dmg += player.inventory[i].dmg;
