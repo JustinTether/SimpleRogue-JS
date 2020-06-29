@@ -82,7 +82,7 @@ export class Player {
         let newKey = newX + "," + newY;
         console.log("NEW KEY + ", newKey);
 
-        if (Game.map[newKey].tile == "#") { return; };
+        if (Game.map[newKey].tile >= 7 && Game.map[newKey].tile <= 11) { return; };
 
         console.log("Calculating if hit", this.enemys);
         //We've hit an enemy, let's figure out which one

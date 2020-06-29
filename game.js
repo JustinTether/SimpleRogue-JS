@@ -58,8 +58,17 @@ export const Game = {
 
     this.display = new ROT.Display({width: 20, height: 14, layout: "tile", tileWidth: 32, tileHeight: 32, tileSet: this.tileSet, tileMap: {
       "@": [640, 1952], //player char
-      "#": [448, 128], //Simple wall
+
+
+      "8": [320, 128], //Simple wall
+      "9": [384, 128], //Simple wall
+      "10": [512, 128], //Simple wall
+      "11": [576, 128], //Simple wall
+
+
+
       "*": [192, 2], //Chest?
+
       "1": [64, 128], //Floor 2
       "2": [96, 128], //floor 3
       "3": [128, 128], //floor 4
@@ -67,12 +76,14 @@ export const Game = {
       "5": [192, 128], //floor 6
       "6": [224, 128], //floor 7
       "7": [256, 128], //floor 8
+
       "k": [32, 1307], //Kobold
       "w": [288, 2464], //Witch
       "g": [640, 1314], //goblin
       ">": [1184, 320], //Stairs
       "%": [256, 1280], //skeletal corpse
-      ",": [544, 1632], //Blood
+
+      ",": [544, 1632], //Blood1
 
 
     }});
@@ -110,7 +121,8 @@ export const Game = {
     let diggerCallback = function (x, y, value) {
       if (value) {
         let key = x + "," + y;
-        this.map[key] = {tile: "#", entities: [], };
+        let tile = Math.floor(Math.random() * (11 - 8)) +8;
+        this.map[key] = {tile: tile, entities: [], };
         return;
       } //Not storing walls?
 
@@ -378,7 +390,19 @@ export const Game = {
           return true;
 
         case 7:
-          return true;        
+          return true;  
+          
+        case 8:
+          return false;
+
+        case 9:
+          return false;
+
+        case 10:
+          return false;
+
+        case 11: 
+          return false;
   
         default:
           return false;
@@ -402,7 +426,7 @@ export const Game = {
       Game.textDisplay.drawText(0, i, notifications[i]);
 
       //If we expand past the screens height, clear the nofications array
-      if (i == Game.textDisplay._options.height - 2) {
+      if (i > Game.textDisplay._options.height - 5) {
         Game.notifications.splice(0, Game.notifications.length - 1);
       }
     }
